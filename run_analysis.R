@@ -20,6 +20,7 @@ runAnalysis <- function() {
 
 #Now we extract all the feature dataset
 featureData <- read.table("UCI HAR Dataset/features.txt")
+
 #Preparing the training dataset
 trainingData <- read.table("UCI HAR Dataset/train/X_train.txt")
 #Creating the test dataset
@@ -32,22 +33,18 @@ colnames(mergedData) <- t(featureData[,2])
 #find means and std of data
 means_stds_features <- featureData$V2[grep("mean\\(\\)|std\\(\\)", featureData[, 2])]
 
-#find activities dataset
-activityLabelsDataset <- read.table("UCI HAR Dataset/activity_labels.txt")
-
-trainingActivityData <- read.table("UCI HAR Dataset/train/Y_train.txt")
-testingActivityData <- read.table("UCI HAR Dataset/test/Y_test.txt" )
-mergedActivityData <- rbind(trainingActivityData, testingActivityData)
-
 #merging activity, subject with original dataset
 resultingDataset<-cbind(mergedData,getSubjects(),getActivities())
 
-#Set new labels for columns
-names(mergedData)<-gsub("^t", "Time", names(mergedData))
-names(mergedData)<-gsub("^f", "Frqn", names(mergedData))
-
 #tidying resultingDataset containing means_stds_features as per activity and subject
 dataTidy <- melt(resultingDataset, id.vars=means_stds_features, measure.vars=c("subject", "activity"))
+
+#Set new labels for columns
+names(dataTidy)<-gsub("^t", "Time-", names(dataTidy))
+names(dataTidy)<-gsub("^f", "Frequency-", names(dataTidy))
+names(dataTidy)<-gsub("Acc", "-Accelerometer-", names(dataTidy))
+names(dataTidy)<-gsub("Gyro", "-Gyroscope-", names(dataTidy))
+names(dataTidy)<-gsub("Mag", "-Magnitude-", names(dataTidy))
 
 #finally writing tidy means data
 write.table(dataTidy, "tidy_means_data.txt", row.names = FALSE)
@@ -66,6 +63,14 @@ getSubjects <- function() {
 }
 
 getActivities <- function() {
+  
+  
+  #find activities dataset
+  activityLabelsDataset <- read.table("UCI HAR Dataset/activity_labels.txt")
+  
+  trainingActivityData <- read.table("UCI HAR Dataset/train/Y_train.txt")
+  testingActivityData <- read.table("UCI HAR Dataset/test/Y_test.txt" )
+  mergedActivityData <- rbind(trainingActivityData, testingActivityData)
   
   # format the data set
   finalActivityData<-merge(mergedActivityData,activityLabelsDataset)
